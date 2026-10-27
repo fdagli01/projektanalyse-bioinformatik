@@ -1,0 +1,11 @@
+.venv/
+.venv311/
+.venv*/
+__pycache__/
+.DS_Store
+# cloned separately (see HANDOFF.md)
+unsupervised-behavior-tutorials/
+# regenerable outputs
+calisma/Fly_mmpy/
+calisma/cikti/*.npy
+calisma/cikti/*.npz
