@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pose Annotation</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --text: #1b1f27; --muted: #5d6573; --line: #dde1e7;
+    --accent: #2457d6; --accent-soft: #e3ebfd; --good: #1f8a4c; --mid: #b7791f; --bad: #c4392d;
+    --a: #e63c3c; --b: #1fb3d1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c; --panel: #1d2128; --text: #e7eaf0; --muted: #9aa3b2; --line: #2e343e;
+      --accent: #6d95ff; --accent-soft: #24324f; --good: #3fbf74; --mid: #e0a43c; --bad: #ef6b5f; --b: #28c8e6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171c; --panel: #1d2128; --text: #e7eaf0; --muted: #9aa3b2; --line: #2e343e;
+    --accent: #6d95ff; --accent-soft: #24324f; --good: #3fbf74; --mid: #e0a43c; --bad: #ef6b5f; --b: #28c8e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { font-size: 16px; margin: 0; }
+  .meta { color: var(--muted); font-size: 12.5px; }
+  .progress { flex: 1 1 180px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .bar { flex: 1; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+  button { font: inherit; color: var(--text); }
+  .btn { border: 1px solid var(--line); background: var(--panel); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .tabs .btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 430px; gap: 16px; padding: 16px 20px; max-width: 1560px; margin: 0 auto; }
+  @media (max-width: 1050px) { main { grid-template-columns: 1fr; padding: 12px 16px; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .imgs { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 10px; align-items: start; }
+  @media (max-width: 700px) { .imgs { grid-template-columns: 1fr; } }
+  .imgs img { width: 100%; border-radius: 6px; display: block; background: #000; cursor: zoom-in; }
+  .caption { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .ctx { margin-top: 8px; }
+  .controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+  .controls button { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+  .controls button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .badge { padding: 1px 8px; border-radius: 10px; background: var(--mid); color: #fff; font-size: 12px; }
+  .strip { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 3px; margin-top: 6px; }
+  .strip img { width: 100%; border-radius: 3px; opacity: .5; cursor: pointer; border: 2px solid transparent; }
+  .strip img.centre { border-bottom-color: var(--accent); }
+  .strip img.on { opacity: 1; border-color: var(--accent); }
+  .legend { margin-top: 8px; font-size: 13px; color: var(--muted); }
+  .legend b.a { color: var(--a); } .legend b.b { color: var(--b); }
+  .q { padding: 8px 0 10px 10px; border-left: 3px solid var(--line); margin-bottom: 8px; }
+  .q.todo { border-left-color: var(--accent); }
+  .q.done { border-left-color: var(--good); }
+  .q h3 { margin: 0 0 1px; font-size: 14px; }
+  .q p { margin: 0 0 6px; color: var(--muted); font-size: 12.5px; }
+  .opts { display: flex; flex-wrap: wrap; gap: 5px; }
+  .opts button { border: 1px solid var(--line); background: var(--bg); padding: 5px 9px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .opts button.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .row { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .tag { font-weight: 700; min-width: 20px; }
+  .tag.a { color: var(--a); } .tag.b { color: var(--b); }
+  table.grid { border-collapse: collapse; width: 100%; font-size: 13px; }
+  table.grid th { text-align: left; color: var(--muted); font-weight: 600; padding: 3px 4px; font-size: 12px; }
+  table.grid td { padding: 3px 4px; vertical-align: middle; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; border-right: 1px solid var(--line); background: var(--bg); padding: 4px 7px; cursor: pointer; font-size: 12px; }
+  .seg button:last-child { border-right: 0; }
+  .seg button.sel.c { background: var(--good); color: #fff; }
+  .seg button.sel.w { background: var(--bad); color: #fff; }
+  .seg button.sel.n { background: var(--muted); color: #fff; }
+  .link { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; font-size: 12.5px; text-decoration: underline; }
+  textarea, input[type=text] { width: 100%; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; padding: 6px; }
+  textarea { min-height: 48px; }
+  .reveal { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); font-size: 13px; }
+  .reveal table { width: 100%; border-collapse: collapse; }
+  .reveal td { padding: 2px 4px; }
+  .nav { display: flex; gap: 8px; margin-top: 12px; }
+  .nav .btn { flex: 1; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .good { color: var(--good); } .mid { color: var(--mid); } .bad { color: var(--bad); }
+  .hidden { display: none !important; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.88); display: flex; align-items: center; justify-content: center; cursor: zoom-out; z-index: 5; }
+  .overlay img { max-width: 96vw; max-height: 94vh; }
+  .start { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  .start .card { padding: 22px; }
+  .start h2 { margin-top: 0; }
+  .start label { display: block; margin: 12px 0 4px; font-weight: 600; }
+  .start .check { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; }
+  .records { margin-top: 14px; font-size: 13.5px; }
+  .records button { margin: 3px 6px 3px 0; }
+  .summary { padding: 16px 20px; max-width: 1150px; margin: 0 auto; }
+  .summary table { border-collapse: collapse; width: 100%; background: var(--panel); border: 1px solid var(--line); margin-bottom: 18px; }
+  .summary th, .summary td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .summary th { color: var(--muted); font-weight: 600; font-size: 12.5px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .ci { color: var(--muted); font-size: 12px; }
+  .note { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Pose Annotation</h1>
+  <span class="meta" id="hdrMeta"></span>
+  <div class="progress"><div class="bar"><div id="bar"></div></div><span id="count"></span></div>
+  <div class="tabs"><button class="btn on" id="tabItems">Items</button> <button class="btn" id="tabSummary">Summary</button></div>
+  <button class="btn" id="exportJson">Export record (JSON)</button>
+  <button class="btn" id="exportCsv">CSV</button>
+</header>
+
+<section class="start" id="start">
+  <div class="card">
+    <h2>Start an annotation session</h2>
+    <p class="note" id="startMeta"></p>
+    <p>Read the protocol before the first item: <a href="PROTOCOL.md" target="_blank">PROTOCOL.md</a> (version <b id="protoV"></b>).
+       The two annotators work independently and do not discuss items until both records are exported.</p>
+    <label for="initials">Your initials</label>
+    <input type="text" id="initials" maxlength="6" placeholder="e.g. MFD" autocomplete="off">
+    <label class="check"><input type="checkbox" id="readProto"> I have read protocol version <b id="protoV2"></b> and will follow it.</label>
+    <div class="nav"><button class="btn primary" id="startBtn" disabled>Start</button></div>
+    <div class="records" id="records"></div>
+    <p class="note">Continue on another computer: <button class="link" id="loadBtn">load an exported record (JSON)</button>
+      <input type="file" id="loadFile" accept=".json,application/json" class="hidden"></p>
+  </div>
+</section>
+
+<main id="itemView" class="hidden">
+  <section class="card">
+    <div class="imgs">
+      <div>
+        <img id="zoom" alt="Zoom on the animals">
+        <div class="caption">Zoom on the animals · click to enlarge</div>
+        <div class="ctx" id="ctx">
+          <div class="controls">
+            <button id="ctxPrev" title="Shift + ←">◀ 1</button>
+            <button id="ctxPlay" title="Space">▶ Play ±5</button>
+            <button id="ctxNext" title="Shift + →">1 ▶</button>
+            <span class="num" id="ctxWhere"></span>
+            <span class="badge hidden" id="ctxBadge">context – answer for the centre frame</span>
+          </div>
+          <div class="strip" id="strip"></div>
+        </div>
+      </div>
+      <div><img id="full" alt="Full frame"><div class="caption">Full frame (centre)</div></div>
+    </div>
+    <div class="legend">Skeletons: <b class="a">A = red</b>, <b class="b">B = cyan</b>. These are SLEAP detections, not male / female. Item <b id="itemId"></b>.</div>
+  </section>
+
+  <aside class="card">
+    <div id="questions"></div>
+    <div class="q">
+      <h3>Note (optional)</h3>
+      <textarea id="note" placeholder="Anything unusual, e.g. 'mounting; A is only the head'"></textarea>
+    </div>
+    <div id="reveal"></div>
+    <div class="nav">
+      <button class="btn" id="prev">← Back</button>
+      <button class="btn primary" id="next">Next →</button>
+    </div>
+    <div class="hint"><b>← →</b> previous / next item (next only when the item is complete) · <b>Shift + ← →</b> context frames · <b>Space</b> play context · Protocol: <a href="PROTOCOL.md" target="_blank">PROTOCOL.md</a></div>
+  </aside>
+</main>
+
+<section class="summary hidden" id="summary"></section>
+<div class="overlay hidden" id="overlay"><img id="overlayImg" alt=""></div>
+
+<script src="frames.js"></script>
+<script>
+"use strict";
+const R = window.REVIEW;
+const ITEMS = R.items, FR = R.frames;
+const $ = id => document.getElementById(id);
+const now = () => new Date().toISOString();
+const SKEL = ["A", "B"];
+
+const SCENE = [["apart", "Apart"], ["touching", "Touching"], ["overlapping", "Overlapping"], ["one", "One mouse visible"], ["unusable", "Unusable"]];
+const DETECT = [["mouse", "On a mouse"], ["duplicate", "Duplicate"], ["ghost", "Ghost"]];
+const REGION = [["c", "Correct"], ["w", "Wrong"], ["n", "Not visible"]];
+const WHOLE = [["whole", "Whole"], ["broken", "Broken"]];
+const DARK = [["A", "A"], ["B", "B"], ["cant", "Can't tell"]];
+const SURE = [["sure", "Sure"], ["unsure", "Unsure"]];
+const REGIONS = Object.keys(R.regions);
+
+// ---------- storage ----------
+const keyOf = who => `pose-review:v${R.protocol}:${R.experiment}:${who}`;
+let rec = null;
+function store() { try { localStorage.setItem(keyOf(rec.annotator), JSON.stringify(rec)); } catch (e) {} }
+function stored() {
+  const out = [];
+  try {
+    for (let k = 0; k < localStorage.length; k++) {
+      const key = localStorage.key(k);
+      if (key && key.startsWith(`pose-review:v${R.protocol}:${R.experiment}:`)) out.push(JSON.parse(localStorage.getItem(key)));
+    }
+  } catch (e) {}
+  return out;
+}
+function newRecord(who) {
+  return { kind: "pose-annotation-record", protocol: R.protocol, experiment: R.experiment, male: R.male,
+           annotator: who, started: now(), user_agent: navigator.userAgent,
+           sampling: { seed: R.seed, created: R.created, prediction: R.prediction, video: R.video },
+           items: {}, log: [] };
+}
+
+// ---------- answers ----------
+const A = it => rec.items[it.item] || (rec.items[it.item] = { answers: {} });
+const skels = it => SKEL.slice(0, FR[it.frame].animals);
+function onMouse(a, s) { return a["detect_" + s] === "mouse"; }
+function required(it) {
+  const a = A(it).answers, req = ["scene"];
+  if (a.scene === "unusable") return req.concat(["overall"]);
+  for (const s of skels(it)) req.push("detect_" + s);
+  req.push("missed");
+  for (const s of skels(it)) if (onMouse(a, s)) { for (const r of REGIONS) req.push(`${r}_${s}`); req.push("whole_" + s); }
+  if (skels(it).length === 2 && onMouse(a, "A") && onMouse(a, "B")) { req.push("darker"); if (a.darker && a.darker !== "cant") req.push("darker_conf"); }
+  req.push("overall");
+  return req;
+}
+const complete = it => required(it).every(k => A(it).answers[k]);
+function set(it, field, value) {
+  const st = A(it), old = st.answers[field];
+  if (old === value) return;
+  st.answers[field] = value;
+  rec.log.push({ t: now(), item: it.item, field, from: old ?? null, to: value, after_reveal: !!st.revealed_at });
+  if (complete(it) && !st.completed_at) st.completed_at = now();
+  if (complete(it) && !st.revealed_at) st.revealed_at = now();
+  store(); renderItem(false);
+}
+
+// ---------- session start ----------
+$("protoV").textContent = $("protoV2").textContent = R.protocol;
+$("startMeta").textContent = `${R.experiment} · male: ${R.male} · ${ITEMS.length} items (${Object.keys(FR).length} frames + ${ITEMS.length - Object.keys(FR).length} repeats) · sampled ${R.created}`;
+const checkStart = () => { $("startBtn").disabled = !($("initials").value.trim() && $("readProto").checked); };
+$("initials").oninput = checkStart; $("readProto").onchange = checkStart;
+function begin(r) {
+  rec = r; store();
+  $("start").classList.add("hidden");
+  $("hdrMeta").textContent = `${R.experiment} · annotator ${rec.annotator} · protocol v${R.protocol}`;
+  const first = ITEMS.findIndex(it => !complete(it));
+  idx = first < 0 ? ITEMS.length - 1 : first;
+  show("items");
+}
+$("startBtn").onclick = () => {
+  const who = $("initials").value.trim().toUpperCase();
+  const old = stored().find(r => r.annotator === who);
+  begin(old || newRecord(who));
+};
+(function listRecords() {
+  const rs = stored();
+  if (!rs.length) return;
+  $("records").innerHTML = "<b>Records in this browser:</b><br>";
+  for (const r of rs) {
+    const n = ITEMS.filter(it => { rec = r; return complete(it); }).length;
+    const b = document.createElement("button"); b.className = "btn";
+    b.textContent = `Continue ${r.annotator} (${n}/${ITEMS.length})`;
+    b.onclick = () => begin(r);
+    $("records").appendChild(b);
+  }
+  rec = null;
+})();
+$("loadBtn").onclick = () => $("loadFile").click();
+$("loadFile").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  f.text().then(t => {
+    const r = JSON.parse(t);
+    if (r.kind !== "pose-annotation-record" || r.experiment !== R.experiment || r.protocol !== R.protocol) {
+      alert("This record is for another video or protocol version."); return;
+    }
+    begin(r);
+  }).catch(() => alert("Could not read this file."));
+};
+
+// ---------- context frames ----------
+let idx = 0, off = 0, timer = null, shownAt = null;
+const ctxOf = it => FR[it.frame].context || [FR[it.frame].zoom];
+const half = it => (ctxOf(it).length - 1) / 2;
+function showCtx() {
+  const it = ITEMS[idx], c = ctxOf(it), h = half(it);
+  $("zoom").src = c[off + h];
+  $("ctx").classList.toggle("hidden", c.length < 2);
+  $("ctxWhere").textContent = off === 0 ? "centre frame" : `${off > 0 ? "+" : "−"}${Math.abs(off)} frame${Math.abs(off) > 1 ? "s" : ""} (${(Math.abs(off) * 0.04).toFixed(2)} s)`;
+  $("ctxBadge").classList.toggle("hidden", off === 0);
+  [...$("strip").children].forEach((im, k) => im.classList.toggle("on", k === off + h));
+}
+function stepCtx(d) { const h = half(ITEMS[idx]); off = Math.max(-h, Math.min(h, off + d)); showCtx(); }
+function play(on) {
+  clearInterval(timer); timer = null;
+  $("ctxPlay").classList.toggle("on", !!on);
+  $("ctxPlay").textContent = on ? "■ Stop" : "▶ Play ±5";
+  if (!on) return;
+  const h = half(ITEMS[idx]); off = -h; showCtx();
+  timer = setInterval(() => { off = off >= h ? -h : off + 1; showCtx(); }, 180);
+}
+$("ctxPrev").onclick = () => { play(false); stepCtx(-1); };
+$("ctxNext").onclick = () => { play(false); stepCtx(1); };
+$("ctxPlay").onclick = () => play(!timer);
+
+// ---------- item view ----------
+function opts(list, value, onpick, cls) {
+  const box = document.createElement("div"); box.className = cls || "opts";
+  for (const [v, label] of list) {
+    const b = document.createElement("button"); b.textContent = label;
+    if (value === v) b.classList.add("sel");
+    if (cls === "seg") b.classList.add(v);
+    b.onclick = () => onpick(v);
+    box.appendChild(b);
+  }
+  return box;
+}
+function block(title, help, done) {
+  const q = document.createElement("div"); q.className = "q " + (done ? "done" : "todo");
+  q.innerHTML = `<h3>${title}</h3>` + (help ? `<p>${help}</p>` : "");
+  return q;
+}
+function tag(s) { const t = document.createElement("span"); t.className = "tag " + s.toLowerCase(); t.textContent = s; return t; }
+
+function renderItem(full) {
+  const it = ITEMS[idx], fr = FR[it.frame], st = A(it), a = st.answers;
+  if (full) {
+    $("full").src = fr.full; $("itemId").textContent = it.item;
+    const strip = $("strip"); strip.innerHTML = "";
+    ctxOf(it).forEach((src, k) => {
+      const im = document.createElement("img"); im.src = src; im.alt = "";
+      if (k === half(it)) im.classList.add("centre");
+      im.onclick = () => { play(false); off = k - half(it); showCtx(); };
+      strip.appendChild(im);
+    });
+    $("note").value = st.note || "";
+    showCtx();
+  }
+  const Q = $("questions"); Q.innerHTML = "";
+  let q = block("Q1 Scene – what do you see?", "Apart: fur not touching · Touching: bodies touch, both mostly visible · Overlapping: one hides much of the other · Unusable: cannot be judged.", a.scene);
+  q.appendChild(opts(SCENE, a.scene, v => set(it, "scene", v))); Q.appendChild(q);
+
+  if (a.scene && a.scene !== "unusable") {
+    q = block("Q2 Detection – what is each skeleton on?", "Duplicate: on a mouse that already has another skeleton · Ghost: on no mouse (bedding, wall, reflection).",
+              skels(it).every(s => a["detect_" + s]));
+    for (const s of skels(it)) { const r = document.createElement("div"); r.className = "row"; r.appendChild(tag(s)); r.appendChild(opts(DETECT, a["detect_" + s], v => set(it, "detect_" + s, v))); q.appendChild(r); }
+    Q.appendChild(q);
+
+    q = block("Q3 Missed mouse – is a visible mouse without any skeleton?", "", a.missed);
+    q.appendChild(opts([["yes", "Yes"], ["no", "No"]], a.missed, v => set(it, "missed", v))); Q.appendChild(q);
+
+    const on = skels(it).filter(s => onMouse(a, s));
+    if (on.length) {
+      q = block("Q4 Keypoints – per region, are the drawn points on the right body part?",
+                "Head: nose, ears, neck · Body: shoulders, spine1–2 · Rear: spine3, hips, tail base. Missing points are not errors; a region with none drawn is 'Not visible'.",
+                on.every(s => REGIONS.every(r => a[`${r}_${s}`])));
+      const t = document.createElement("table"); t.className = "grid";
+      t.innerHTML = `<tr><th></th>${REGIONS.map(r => `<th>${r[0].toUpperCase() + r.slice(1)}</th>`).join("")}<th></th></tr>`;
+      for (const s of on) {
+        const tr = document.createElement("tr");
+        const td0 = document.createElement("td"); td0.appendChild(tag(s)); tr.appendChild(td0);
+        for (const r of REGIONS) { const td = document.createElement("td"); td.appendChild(opts(REGION, a[`${r}_${s}`], v => set(it, `${r}_${s}`, v), "seg")); tr.appendChild(td); }
+        const td = document.createElement("td"); const b = document.createElement("button"); b.className = "link"; b.textContent = "All correct";
+        b.onclick = () => REGIONS.forEach(r => set(it, `${r}_${s}`, "c")); td.appendChild(b); tr.appendChild(td);
+        t.appendChild(tr);
+      }
+      q.appendChild(t); Q.appendChild(q);
+
+      q = block("Q5 Integrity – is each skeleton whole and on one mouse?", "Broken: stretched, folded, or connecting points of both mice in the centre frame.", on.every(s => a["whole_" + s]));
+      for (const s of on) { const r = document.createElement("div"); r.className = "row"; r.appendChild(tag(s)); r.appendChild(opts(WHOLE, a["whole_" + s], v => set(it, "whole_" + s, v))); q.appendChild(r); }
+      Q.appendChild(q);
+    }
+
+    if (skels(it).length === 2 && onMouse(a, "A") && onMouse(a, "B")) {
+      q = block("Q6 Darker mouse – compare the fur of the back (neck to tail base)", "Can't tell when one back is hidden.", a.darker && (a.darker === "cant" || a.darker_conf));
+      q.appendChild(opts(DARK, a.darker, v => set(it, "darker", v)));
+      if (a.darker && a.darker !== "cant") { const r = document.createElement("div"); r.className = "row"; r.innerHTML = "<span class='note'>How sure?</span>"; r.appendChild(opts(SURE, a.darker_conf, v => set(it, "darker_conf", v))); q.appendChild(r); }
+      Q.appendChild(q);
+    }
+  }
+  if (a.scene) {
+    q = block("Q7 Overall – how sure are you about this item?", "", a.overall);
+    q.appendChild(opts(SURE, a.overall, v => set(it, "overall", v))); Q.appendChild(q);
+  }
+  renderReveal(it);
+  const n = ITEMS.filter(complete).length;
+  $("count").textContent = `${n} / ${ITEMS.length} complete · item ${idx + 1}`;
+  $("bar").style.width = (100 * n / ITEMS.length) + "%";
+  $("prev").disabled = idx === 0;
+  $("next").disabled = !complete(it);
+  $("next").textContent = idx === ITEMS.length - 1 ? "Finish → Summary" : "Next →";
+}
+
+function scriptDarker(fr) {
+  const [ga, gb] = fr.grey;
+  return ga == null || gb == null ? null : (ga < gb ? "A" : "B");
+}
+function renderReveal(it) {
+  const box = $("reveal");
+  if (!complete(it)) { box.innerHTML = ""; return; }
+  const fr = FR[it.frame], a = A(it).answers, sd = scriptDarker(fr);
+  const kinds = { apart: "apart (> 250 px)", contact: "contact (< 120 px)", single: "only 1 animal found", random: "random" };
+  let dark = "";
+  if (a.darker && fr.grey.length === 2) {
+    dark = `<tr><td>Identity script's darker mouse</td><td><b>${sd ?? "–"}</b>` +
+      (a.darker === "cant" || !sd ? "" : a.darker === sd ? " · <span class='good'>same as yours</span>" : " · <span class='bad'>differs from yours</span>") + "</td></tr>";
+  }
+  box.innerHTML = `<div class="reveal"><b>Revealed after your answers</b> (changes from now on are logged as 'after reveal')
+    <table>
+      <tr><td>Frame</td><td><b>${it.frame.toLocaleString("en")}</b> · ${Math.floor(fr.time / 60)}:${String(Math.floor(fr.time % 60)).padStart(2, "0")} min</td></tr>
+      <tr><td>SLEAP stratum</td><td>${kinds[fr.kind] || fr.kind}${fr.distance != null ? ` · distance ${fr.distance} px` : ""}</td></tr>
+      <tr><td>SLEAP instance score</td><td>${fr.score.map((s, k) => SKEL[k] + " " + s).join(" · ")}</td></tr>
+      <tr><td>Back grey level (lower = darker)</td><td>${fr.grey.map((g, k) => SKEL[k] + " " + (g ?? "–")).join(" · ")}</td></tr>
+      ${dark}
+      ${it.repeat_of ? `<tr><td>Repeat</td><td>this frame was shown before as ${it.repeat_of}</td></tr>` : ""}
+    </table></div>`;
+}
+
+function leave() {
+  if (shownAt != null && rec) { const st = A(ITEMS[idx]); st.time_ms = (st.time_ms || 0) + (Date.now() - shownAt); store(); }
+  shownAt = null;
+}
+function go(d) {
+  const it = ITEMS[idx];
+  if (d > 0 && !complete(it)) return;
+  leave(); play(false); off = 0;
+  if (d > 0 && idx === ITEMS.length - 1) { show("summary"); return; }
+  idx = Math.max(0, Math.min(ITEMS.length - 1, idx + d));
+  const st = A(ITEMS[idx]); if (!st.first_shown) { st.first_shown = now(); store(); }
+  shownAt = Date.now(); renderItem(true);
+}
+$("prev").onclick = () => go(-1);
+$("next").onclick = () => go(1);
+$("note").addEventListener("input", () => { A(ITEMS[idx]).note = $("note").value; store(); });
+for (const id of ["zoom", "full"]) $(id).onclick = () => { $("overlayImg").src = $(id).src; $("overlay").classList.remove("hidden"); };
+$("overlay").onclick = () => $("overlay").classList.add("hidden");
+document.addEventListener("visibilitychange", () => { if (document.hidden) leave(); else if (rec && !$("itemView").classList.contains("hidden")) shownAt = Date.now(); });
+
+document.addEventListener("keydown", e => {
+  if (!rec || $("itemView").classList.contains("hidden")) return;
+  if (!$("overlay").classList.contains("hidden")) { if (e.key === "Escape") $("overlay").classList.add("hidden"); return; }
+  if (["TEXTAREA", "INPUT"].includes(document.activeElement.tagName)) { if (e.key === "Escape") document.activeElement.blur(); return; }
+  if (e.key === "ArrowRight" && e.shiftKey) { play(false); stepCtx(1); }
+  else if (e.key === "ArrowLeft" && e.shiftKey) { play(false); stepCtx(-1); }
+  else if (e.key === "ArrowRight") go(1);
+  else if (e.key === "ArrowLeft") go(-1);
+  else if (e.key === " ") { e.preventDefault(); play(!timer); }
+});
+
+function show(which) {
+  if (!rec) return;
+  $("itemView").classList.toggle("hidden", which !== "items");
+  $("summary").classList.toggle("hidden", which !== "summary");
+  $("tabItems").classList.toggle("on", which === "items");
+  $("tabSummary").classList.toggle("on", which === "summary");
+  if (which === "summary") { leave(); play(false); summary(); }
+  else { const st = A(ITEMS[idx]); if (!st.first_shown) { st.first_shown = now(); store(); } shownAt = Date.now(); renderItem(true); }
+}
+$("tabItems").onclick = () => show("items");
+$("tabSummary").onclick = () => show("summary");
+
+// ---------- summary (the full analysis is scripts/analyze_reviews.py) ----------
+function wilson(k, n) {
+  if (!n) return null;
+  const z = 1.96, p = k / n, d = 1 + z * z / n, c = (p + z * z / (2 * n)) / d, h = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d;
+  return [p, Math.max(0, c - h), Math.min(1, c + h)];
+}
+function cell(k, n) {
+  const w = wilson(k, n); if (!w) return `<td class="num">–</td>`;
+  const p = Math.round(100 * w[0]), cls = w[0] >= .9 ? "good" : w[0] >= .7 ? "mid" : "bad";
+  return `<td class="num"><span class="${cls}">${p}%</span> <span class="ci">[${Math.round(100 * w[1])}–${Math.round(100 * w[2])}] n=${n}</span></td>`;
+}
+function summary() {
+  const firsts = ITEMS.filter(it => !it.repeat_of && complete(it));
+  const strata = ["apart", "contact", "single", "random"];
+  const label = { apart: "apart", contact: "contact", single: "only 1 animal found", random: "random" };
+  const rows = strata.map(k => {
+    const its = firsts.filter(it => FR[it.frame].kind === k && A(it).answers.scene !== "unusable");
+    let det = 0, detN = 0, miss = 0, reg = 0, regN = 0, wh = 0, whN = 0, ag = 0, agN = 0;
+    for (const it of its) {
+      const a = A(it).answers;
+      for (const s of skels(it)) { detN++; if (a["detect_" + s] === "mouse") det++; }
+      if (a.missed === "yes") miss++;
+      for (const s of skels(it).filter(s => onMouse(a, s))) {
+        for (const r of REGIONS) { const v = a[`${r}_${s}`]; if (v === "c" || v === "w") { regN++; if (v === "c") reg++; } }
+        whN++; if (a["whole_" + s] === "whole") wh++;
+      }
+      const sd = scriptDarker(FR[it.frame]);
+      if (a.darker && a.darker !== "cant" && sd) { agN++; if (a.darker === sd) ag++; }
+    }
+    return `<tr><td>${label[k]}</td><td class="num">${its.length}</td>${cell(det, detN)}${cell(its.length - miss, its.length)}${cell(reg, regN)}${cell(wh, whN)}${cell(ag, agN)}</tr>`;
+  }).join("");
+  const scenes = SCENE.map(([v, l]) => `${l}: <b>${firsts.filter(it => A(it).answers.scene === v).length}</b>`).join(" · ");
+  const reps = ITEMS.filter(it => it.repeat_of && complete(it));
+  const same = reps.filter(it => {
+    const o = ITEMS.find(x => x.item === it.repeat_of), a1 = A(o).answers, a2 = A(it).answers;
+    return complete(o) && JSON.stringify(Object.fromEntries(required(o).map(k => [k, a1[k]]))) === JSON.stringify(Object.fromEntries(required(it).map(k => [k, a2[k]])));
+  }).length;
+  const after = rec.log.filter(l => l.after_reveal).length;
+  $("summary").innerHTML = `
+    <h2>Summary · ${R.experiment} · annotator ${rec.annotator}</h2>
+    <p class="note">First showings only, unusable frames left out. Percentages with 95 % Wilson confidence intervals. This page is a quick view;
+       the reported numbers come from <code>scripts/analyze_reviews.py</code>, which also compares the two annotators.</p>
+    <table>
+      <tr><th>SLEAP stratum</th><th>Items</th><th>Skeletons on a mouse</th><th>No mouse missed</th><th>Regions correct</th><th>Skeletons whole</th><th>Darker: you = script</th></tr>
+      ${rows}
+    </table>
+    <p>Your scene judgement (first showings): ${scenes}</p>
+    <p>Consistency on repeated items: <b>${same} / ${reps.length}</b> identical (every answer of the item the same).</p>
+    <p>Answers changed after the values were revealed: <b>${after}</b>.</p>
+    <p class="note">Records are kept in this browser. Export the JSON record when you are done and keep that file.</p>`;
+}
+
+// ---------- export ----------
+function download(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+const stamp = () => { const d = new Date(), p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; };
+$("exportJson").onclick = () => {
+  if (!rec) return; leave(); shownAt = $("itemView").classList.contains("hidden") ? null : Date.now();
+  rec.exported = now();
+  const out = Object.assign({}, rec, { item_list: ITEMS.map(it => ({ item: it.item, frame: it.frame, repeat_of: it.repeat_of, stratum: FR[it.frame].kind,
+    animals: FR[it.frame].animals, distance: FR[it.frame].distance, score: FR[it.frame].score, grey: FR[it.frame].grey })) });
+  download(`annotation_${R.experiment}_${rec.annotator}_${stamp()}.json`, JSON.stringify(out, null, 1), "application/json");
+};
+$("exportCsv").onclick = () => {
+  if (!rec) return;
+  const fields = ["scene", "detect_A", "detect_B", "missed"].concat(...SKEL.map(s => REGIONS.map(r => `${r}_${s}`).concat(["whole_" + s])), ["darker", "darker_conf", "overall"]);
+  const head = ["protocol", "experiment", "annotator", "item", "frame", "repeat_of", "stratum", "animals", "distance_px", "score_A", "score_B", "grey_A", "grey_B", "script_darker"]
+    .concat(fields, ["note", "time_s", "completed_at"]);
+  const esc = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+  const lines = [head.join(",")].concat(ITEMS.map(it => {
+    const fr = FR[it.frame], st = A(it), a = st.answers;
+    return [R.protocol, R.experiment, rec.annotator, it.item, it.frame, it.repeat_of, fr.kind, fr.animals, fr.distance, fr.score[0], fr.score[1], fr.grey[0], fr.grey[1], scriptDarker(fr)]
+      .concat(fields.map(f => a[f]), [st.note, st.time_ms ? (st.time_ms / 1000).toFixed(1) : null, st.completed_at]).map(esc).join(",");
+  }));
+  download(`annotation_${R.experiment}_${rec.annotator}_${stamp()}.csv`, lines.join("\n") + "\n", "text/csv");
+};
+</script>
+</body>
+</html>
