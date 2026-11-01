@@ -1,8 +1,8 @@
 """Draw the SLEAP skeleton of every labelled frame onto the video and save it as an .mp4.
 Animals are coloured and named by track (male = blue, female = orange).
 
-Run with the SLEAP tool python (it has sleap_io and opencv):
-  ~/.local/share/uv/tools/sleap/bin/python calisma/sleap_draw_skeleton_video.py PRED.slp VIDEO.avi OUT.mp4 [--scale 0.5]
+Run from the repository root with the SLEAP tool python, $PY (it has sleap_io and opencv; see ../README.md):
+  $PY 02_pose_sleap/scripts/draw_skeleton_video.py PRED.slp VIDEO.avi OUT.mp4 [--scale 0.5]
 """
 import argparse
 import numpy as np

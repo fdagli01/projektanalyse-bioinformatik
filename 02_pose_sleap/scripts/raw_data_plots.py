@@ -1,8 +1,8 @@
 """First look at raw (uncleaned) SLEAP predictions, before choosing any cleaning thresholds.
 Four panels: keypoint confidence, frame-to-frame jumps, body length, distance between the two animals.
 
-Run with the SLEAP tool python (it has sleap_io):
-  ~/.local/share/uv/tools/sleap/bin/python calisma/sleap_raw_data_plots.py PRED.slp OUT.png
+Run from the repository root with the SLEAP tool python, $PY (it has sleap_io; see ../README.md):
+  $PY 02_pose_sleap/scripts/raw_data_plots.py PRED.slp OUT.png
 """
 import sys
 import numpy as np

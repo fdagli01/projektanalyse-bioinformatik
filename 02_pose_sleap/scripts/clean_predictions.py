@@ -14,8 +14,8 @@ Outputs (OUT is a prefix):
   OUT_report.txt  short summary numbers
   OUT_qc.png      one figure: what was removed and filled
 
-Run with the SLEAP tool python (it has sleap_io):
-  ~/.local/share/uv/tools/sleap/bin/python calisma/sleap_clean_predictions.py PRED.slp OUT
+Run from the repository root with the SLEAP tool python, $PY (it has sleap_io; see ../README.md):
+  $PY 02_pose_sleap/scripts/clean_predictions.py PRED.slp OUT
 """
 import os
 import sys
@@ -27,7 +27,7 @@ from scipy.ndimage import median_filter
 import sleap_io as sio
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from sleap_raw_data_plots import to_arrays
+from raw_data_plots import to_arrays
 
 FPS = 25
 SCORE_MIN = 0.3        # below this the model is guessing

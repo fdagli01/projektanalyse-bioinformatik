@@ -1,4 +1,4 @@
-"""Notebook 01, sections 8-10: carve the map into behaviors (watershed), read the ethogram, and look at
+"""Step 4 (Notebook 01, sections 8-10): carve the map into behaviors (watershed), read the ethogram, and look at
 example bouts of each region so they can be named. Starts with a toy landscape to show the idea."""
 import os, sys, types, glob, shutil
 import numpy as np
@@ -7,8 +7,10 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import cv2
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "calisma", "cikti")
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # 01_method_fly/
+ROOT = os.path.dirname(HERE)                                         # repository root
+OUT = os.path.join(HERE, "figures", "working")
+CACHE = os.path.join(HERE, "intermediate")   # regenerated .npz/.npy and the Fly_mmpy project (not in git)
 DATA = os.path.join(ROOT, "unsupervised-behavior-tutorials", "motionmapperpy", "data", "fly")
 
 def _stub(name, **attrs):
@@ -39,17 +41,17 @@ def toy_watershed():
     fig = plt.figure(figsize=(15, 4.8))
     ax0 = fig.add_subplot(1, 3, 1, projection="3d")
     ax0.plot_surface(X, Y, D, cmap="viridis", linewidth=0, antialiased=False)
-    ax0.set_title("Yoğunluk = arazi (tepeler = davranışlar)"); ax0.set_xticks([]); ax0.set_yticks([]); ax0.set_zticks([])
+    ax0.set_title("Density = landscape (hills = behaviours)"); ax0.set_xticks([]); ax0.set_yticks([]); ax0.set_zticks([])
     ax1 = fig.add_subplot(1, 3, 2)
     ax1.imshow(D, origin="lower", cmap=mmpy.gencmap(), extent=(-10, 10, -10, 10))
     ax1.plot(x[peaks[:, 1]], x[peaks[:, 0]], "w*", ms=14)
-    ax1.set_title("Her tepenin zirvesi bir başlangıç noktası"); ax1.set_xticks([]); ax1.set_yticks([])
+    ax1.set_title("The top of each hill is a starting point"); ax1.set_xticks([]); ax1.set_yticks([])
     ax2 = fig.add_subplot(1, 3, 3)
     ax2.imshow(L, origin="lower", cmap="tab10", extent=(-10, 10, -10, 10), alpha=0.6)
     ax2.contour(X, Y, L, levels=np.arange(0.5, L.max()), colors="k", linewidths=1.5)
     ax2.contour(X, Y, D, levels=8, colors="w", linewidths=0.5)
-    ax2.set_title("Ters çevirip su doldur: havuzların\nbuluştuğu yerler = sınırlar"); ax2.set_xticks([]); ax2.set_yticks([])
-    fig.tight_layout(); fig.savefig(os.path.join(OUT, "11_oyuncak_watershed.png"), dpi=110); plt.close(fig)
+    ax2.set_title("Turn it upside down and flood it:\nwhere the pools meet = borders"); ax2.set_xticks([]); ax2.set_yticks([])
+    fig.tight_layout(); fig.savefig(os.path.join(OUT, "11_toy_watershed.png"), dpi=110); plt.close(fig)
 
 
 def main():
@@ -57,7 +59,7 @@ def main():
     datasetnames = ["fly_leap_test", "fly_leap_test_2"]
     moviepaths = [os.path.join(DATA, "%s.mp4" % d) for d in datasetnames]
     fps = 100
-    projectPath = os.path.join(ROOT, "calisma", "Fly_mmpy")
+    projectPath = os.path.join(CACHE, "Fly_mmpy")
 
     parameters = mmpy.setRunParameters()
     parameters.projectPath, parameters.method = projectPath, "UMAP"
@@ -96,12 +98,12 @@ def main():
             ax[0].text(c[0], c[1], str(r), color="k", fontsize=11, ha="center", va="center", weight="bold",
                        bbox=dict(boxstyle="circle,pad=0.15", fc="w", alpha=0.8))
     ax[0].set_aspect("equal"); ax[0].set_xticks([]); ax[0].set_yticks([])
-    ax[0].set_title("Watershed: harita %d davranış bölgesine bölündü" % nreg)
+    ax[0].set_title("Watershed: the map is cut into %d behaviour regions" % nreg)
     occ = np.array([np.mean(wregs == r) for r in range(1, nreg + 1)])
     ax[1].bar(range(1, nreg + 1), 100 * occ, color="firebrick")
-    ax[1].set_xticks(range(1, nreg + 1)); ax[1].set_xlabel("bölge"); ax[1].set_ylabel("zamanın yüzdesi")
-    ax[1].set_title("Sinek zamanını hangi davranışta geçiriyor?")
-    fig.tight_layout(); fig.savefig(os.path.join(OUT, "13_bolgeler.png"), dpi=110); plt.close(fig)
+    ax[1].set_xticks(range(1, nreg + 1)); ax[1].set_xlabel("region"); ax[1].set_ylabel("% of time")
+    ax[1].set_title("How does the fly spend its time?")
+    fig.tight_layout(); fig.savefig(os.path.join(OUT, "13_regions.png"), dpi=110); plt.close(fig)
 
     # ethogram: one label per frame, for both movies, plus a 20 s zoom
     fig, axes = plt.subplots(3, 1, figsize=(15, 8))
@@ -110,14 +112,14 @@ def main():
         E[regs, np.arange(len(regs))] = 1
         ax.imshow(E[1:], aspect="auto", cmap="Greys", interpolation="nearest",
                   extent=(0, len(regs) / fps, nreg + 0.5, 0.5))
-        ax.set_ylabel("bölge"); ax.set_title("Etogram: %s (200 s)" % nm)
+        ax.set_ylabel("region"); ax.set_title("Ethogram: %s (200 s)" % nm)
     seg = slice(2000, 4000)
     regs = regs_by_rec[0][seg]
     tt = np.arange(len(regs)) / fps + seg.start / fps
     axes[2].step(tt, regs, where="post", color="firebrick", lw=1)
     axes[2].set_ylim(0.5, nreg + 0.5); axes[2].set_yticks(range(1, nreg + 1))
-    axes[2].set_xlabel("zaman (s)"); axes[2].set_ylabel("bölge"); axes[2].set_title("Yakın plan: 20 saniye")
-    fig.tight_layout(); fig.savefig(os.path.join(OUT, "14_etogram.png"), dpi=110); plt.close(fig)
+    axes[2].set_xlabel("time (s)"); axes[2].set_ylabel("region"); axes[2].set_title("Close-up: 20 seconds")
+    fig.tight_layout(); fig.savefig(os.path.join(OUT, "14_ethogram.png"), dpi=110); plt.close(fig)
 
     # bouts: how long does the fly stay in one behavior?
     lens = []
@@ -153,7 +155,7 @@ def main():
         for a in row:
             a.set_xticks([]); a.set_yticks([])
         if best is None:
-            row[0].set_ylabel("bölge %d\n(yok)" % r); continue
+            row[0].set_ylabel("region %d\n(none)" % r); continue
         L, di, s = best
         cap = cv2.VideoCapture(moviepaths[di])
         for k, fr in enumerate(np.linspace(s, s + L - 1, ncol).astype(int)):
@@ -165,11 +167,11 @@ def main():
                 row[k].plot(h5s[di][fr, c, 0], h5s[di][fr, c, 1], "-", color="firebrick", lw=0.7)
             row[k].set_title("%.2f s" % ((fr - s) / fps), fontsize=7)
         cap.release()
-        row[0].set_ylabel("bölge %d\n%.2f s" % (r, L / fps), fontsize=9)
-    fig.suptitle("Her bölgenin en uzun epizodundan 6 kare (soldaki: bölge no. ve epizod süresi)", y=1.0)
-    fig.tight_layout(); fig.savefig(os.path.join(OUT, "15_bolge_ornekleri.png"), dpi=90); plt.close(fig)
+        row[0].set_ylabel("region %d\n%.2f s" % (r, L / fps), fontsize=9)
+    fig.suptitle("6 frames from the longest bout of each region (left: region number and bout length)", y=1.0)
+    fig.tight_layout(); fig.savefig(os.path.join(OUT, "15_region_examples.png"), dpi=90); plt.close(fig)
 
-    np.savez(os.path.join(OUT, "nb01_etogram.npz"), regs0=regs_by_rec[0], regs1=regs_by_rec[1],
+    np.savez(os.path.join(CACHE, "ethogram.npz"), regs0=regs_by_rec[0], regs1=regs_by_rec[1],
              z0=z_by_rec[0], z1=z_by_rec[1], nreg=nreg, fps=fps)
     print("saved figures 11-15")
 

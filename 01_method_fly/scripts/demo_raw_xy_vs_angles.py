@@ -1,11 +1,12 @@
-"""Why raw x,y is a poor description: take ONE real fly frame, move + rotate the whole fly (same pose),
+"""Demo: why raw x,y is a poor description: take ONE real fly frame, move + rotate the whole fly (same pose),
 and compare the raw coordinates with the joint angles."""
 import os
 import numpy as np, pandas as pd
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "calisma", "cikti")
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # 01_method_fly/
+ROOT = os.path.dirname(HERE)                                         # repository root
+OUT = os.path.join(HERE, "figures", "working")
 h = pd.read_hdf(os.path.join(ROOT, "unsupervised-behavior-tutorials", "motionmapperpy", "data", "fly", "fly_leap_test_positions.h5"))
 keep = np.mod(np.arange(1, h.shape[1] + 1), 3) != 0
 P = h.values[:, keep].reshape((-1, 32, 2))[7000]            # one frame: (32 points, 2)
@@ -29,14 +30,14 @@ for t in triples:
 conn = [np.arange(6, 10), np.arange(10, 14), np.arange(14, 18), np.arange(18, 22),
         np.arange(22, 26), np.arange(26, 30), [2, 0, 1], [0, 3, 4, 5], [31, 3, 30]]
 fig, ax = plt.subplots(1, 2, figsize=(11, 5))
-for X, col, lab in [(P, "firebrick", "orijinal"), (Q, "royalblue", "aynı sinek: kaydırıldı + 70° döndürüldü")]:
+for X, col, lab in [(P, "firebrick", "original"), (Q, "royalblue", "same fly: shifted + turned by 70°")]:
     for c in conn:
         ax[0].plot(X[c, 0], X[c, 1], "-", color=col, lw=1.5)
     ax[0].plot([], [], color=col, label=lab)
-ax[0].set_aspect("equal"); ax[0].legend(fontsize=8, loc="lower center"); ax[0].set_title("Aynı poz, farklı yer ve yön\n(ham x,y sayıları: %.0f px farklı)" % raw_diff)
+ax[0].set_aspect("equal"); ax[0].legend(fontsize=8, loc="lower center"); ax[0].set_title("Same pose, different place and direction\n(raw x,y numbers: %.0f px different)" % raw_diff)
 w = 0.35; x = np.arange(len(triples))
 a0 = [angle(P, *t) % 360 for t in triples]; a1 = [angle(Q, *t) % 360 for t in triples]
-ax[1].bar(x - w / 2, a0, w, color="firebrick", label="orijinal"); ax[1].bar(x + w / 2, a1, w, color="royalblue", label="kaydırıldı + döndürüldü")
-ax[1].set_xticks(x); ax[1].set_xticklabels(["bacak 1\nüst eklem", "bacak 2\nüst eklem", "bacak 3\nüst eklem", "baş\n(göz-baş-göz)"], fontsize=8)
-ax[1].set_ylabel("açı (derece)"); ax[1].legend(fontsize=8); ax[1].set_title("Eklem açıları: değişmedi")
-fig.tight_layout(); fig.savefig(os.path.join(OUT, "16_ham_vs_aci.png"), dpi=110); plt.close(fig)
+ax[1].bar(x - w / 2, a0, w, color="firebrick", label="original"); ax[1].bar(x + w / 2, a1, w, color="royalblue", label="shifted + turned")
+ax[1].set_xticks(x); ax[1].set_xticklabels(["leg 1\nupper joint", "leg 2\nupper joint", "leg 3\nupper joint", "head\n(eye-head-eye)"], fontsize=8)
+ax[1].set_ylabel("angle (degrees)"); ax[1].legend(fontsize=8); ax[1].set_title("Joint angles: unchanged")
+fig.tight_layout(); fig.savefig(os.path.join(OUT, "16_raw_vs_angles.png"), dpi=110); plt.close(fig)

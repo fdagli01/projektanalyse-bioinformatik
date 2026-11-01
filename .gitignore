@@ -3,12 +3,17 @@
 .venv*/
 __pycache__/
 .DS_Store
-# cloned separately (see README.md)
+
+# cloned separately (see 01_method_fly/README.md)
 unsupervised-behavior-tutorials/
-# regenerable outputs
-calisma/Fly_mmpy/
-calisma/cikti/*.npy
-calisma/cikti/*.npz
+
+# regenerable outputs of stage 1 (.npz/.npy and the Fly_mmpy project)
+01_method_fly/intermediate/
+
+# videos, models and SLEAP results live in the work folder, never in git
+*.avi
+*.mp4
+*.slp
 
 # Local working notes
 HANDOFF.md

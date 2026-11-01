@@ -12,8 +12,8 @@ Per frame:
   3. Frames with only 1 animal get no identity (track left empty), because there is nothing to compare.
 This ignores SLEAP's own track numbers, so it also repairs track swaps made by the tracker.
 
-Run with the SLEAP tool python (it has sleap_io and opencv):
-  ~/.local/share/uv/tools/sleap/bin/python calisma/sleap_assign_identity.py IN.slp VIDEO.avi OUT.slp --male black
+Run from the repository root with the SLEAP tool python, $PY (it has sleap_io and opencv; see ../README.md):
+  $PY 02_pose_sleap/scripts/assign_identity.py IN.slp VIDEO.avi OUT.slp --male black
 """
 import argparse
 import numpy as np

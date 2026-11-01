@@ -1,4 +1,4 @@
-"""English versions of the six Notebook 01 figures used on the one-page overview (cikti/en/).
+"""The six summary figures used on the one-page overview (figures/summary/).
 Recomputes the cheap steps and reloads the saved UMAP map / watershed result, so nothing is retrained."""
 import os, sys, types
 import numpy as np
@@ -10,9 +10,11 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import median_filter
 from sklearn.decomposition import PCA
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # 01_method_fly/
+ROOT = os.path.dirname(HERE)                                         # repository root
 DATA = os.path.join(ROOT, "unsupervised-behavior-tutorials", "motionmapperpy", "data", "fly")
-OUT = os.path.join(ROOT, "calisma", "cikti", "en")
+OUT = os.path.join(HERE, "figures", "summary")
+CACHE = os.path.join(HERE, "intermediate")   # regenerated .npz/.npy and the Fly_mmpy project (not in git)
 os.makedirs(OUT, exist_ok=True)
 
 def _stub(name, **attrs):
@@ -126,7 +128,7 @@ def main():
     fig.tight_layout(); fig.savefig(os.path.join(OUT, "4_wavelet.png"), dpi=110); plt.close(fig)
 
     # 5. UMAP map: training points and density at three smoothings
-    tfolder = os.path.join(ROOT, "calisma", "Fly_mmpy", "UMAP")
+    tfolder = os.path.join(CACHE, "Fly_mmpy", "UMAP")
     with h5py.File(os.path.join(tfolder, "training_embedding.mat"), "r") as f:
         ty = f["trainingEmbedding"][:].T
     m = np.abs(ty).max()

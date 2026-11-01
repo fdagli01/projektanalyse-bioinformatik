@@ -10,7 +10,7 @@ Ideas for the SLEAP → MotionMapper pipeline. Newest first in each section.
       ones, read the male's fur colour from the folder name, write a summary table.
 - [ ] (2026-11-01) **Review cleaning thresholds** after looking at raw predictions
       (score 0.3, spike 40 px, gap fill 5 frames, body length 0.5–1.5×).
-- [ ] (2026-11-01) **Fill in the results table** in SLEAP_PIPELINE.md for the 3 test videos.
+- [ ] (2026-11-01) **Fill in the results table** in 02_pose_sleap/README.md for the 3 test videos.
 - [ ] (2026-11-01) **Ask Maria:** access to a GPU server / HPC for the big batch?
       Should the front camera be used?
 

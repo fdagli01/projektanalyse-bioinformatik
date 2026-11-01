@@ -1,5 +1,5 @@
-"""Notebook 01, sections 3-4: look at the tracking, clean it, joint angles, PCA.
-Saves figures to calisma/cikti/ so they can be viewed one by one."""
+"""Step 1 (Notebook 01, sections 3-4): look at the tracking, clean it, joint angles, PCA.
+Saves figures to figures/working/ so they can be viewed one by one, and the PCA modes to intermediate/."""
 import os
 import numpy as np
 import pandas as pd
@@ -10,10 +10,13 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import median_filter
 from sklearn.decomposition import PCA
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # 01_method_fly/
+ROOT = os.path.dirname(HERE)                                         # repository root
 DATA = os.path.join(ROOT, "unsupervised-behavior-tutorials", "motionmapperpy", "data", "fly")
-OUT = os.path.join(ROOT, "calisma", "cikti")
+OUT = os.path.join(HERE, "figures", "working")
+CACHE = os.path.join(HERE, "intermediate")   # regenerated .npz/.npy and the Fly_mmpy project (not in git)
 os.makedirs(OUT, exist_ok=True)
+os.makedirs(CACHE, exist_ok=True)
 
 # ---- 3. look at the data first
 datasetnames = ["fly_leap_test", "fly_leap_test_2"]
@@ -34,11 +37,11 @@ h5s = [median_filter(h, size=(5, 1, 1)) for h in h5s]
 clean = h5s[0][seg, 13, 1]
 t = np.arange(seg.stop - seg.start) / fps
 fig, ax = plt.subplots(figsize=(13, 3))
-ax.plot(t, raw, color="0.7", lw=2, label="ham (raw)")
-ax.plot(t, clean, color="firebrick", lw=1, label="median filtre")
-ax.set_xlabel("zaman (s)"); ax.set_ylabel("y konumu (px)"); ax.legend()
-ax.set_title("Bir bacak ucunun dikey konumu: takip hataları (sıçramalar) ve temizlenmiş hali")
-fig.tight_layout(); fig.savefig(os.path.join(OUT, "01_median_filtre.png"), dpi=110); plt.close(fig)
+ax.plot(t, raw, color="0.7", lw=2, label="raw")
+ax.plot(t, clean, color="firebrick", lw=1, label="median filter")
+ax.set_xlabel("time (s)"); ax.set_ylabel("y position (px)"); ax.legend()
+ax.set_title("Vertical position of one leg tip: tracking errors (jumps) and the cleaned version")
+fig.tight_layout(); fig.savefig(os.path.join(OUT, "01_median_filter.png"), dpi=110); plt.close(fig)
 
 # skeleton on three video frames
 connections = [np.arange(6, 10), np.arange(10, 14), np.arange(14, 18), np.arange(18, 22),
@@ -51,10 +54,10 @@ for ax, fr in zip(axes, [7000, 7040, 7080]):
     for c in connections:
         ax.plot(h5s[0][fr, c, 0], h5s[0][fr, c, 1], "-", color="firebrick", lw=1)
     ax.plot(h5s[0][fr, :, 0], h5s[0][fr, :, 1], ".", color="yellow", ms=3)
-    ax.set_title("kare %d (t = %.1f s)" % (fr, fr / fps)); ax.axis("off")
+    ax.set_title("frame %d (t = %.1f s)" % (fr, fr / fps)); ax.axis("off")
 cap.release()
-fig.suptitle("Videonun üstüne çizilmiş 32 takip noktası (iskelet)")
-fig.tight_layout(); fig.savefig(os.path.join(OUT, "02_iskelet.png"), dpi=110); plt.close(fig)
+fig.suptitle("32 tracked keypoints (skeleton) drawn on the video")
+fig.tight_layout(); fig.savefig(os.path.join(OUT, "02_skeleton.png"), dpi=110); plt.close(fig)
 
 # ---- 4. representation: joint angles
 angleinds = [[1,0,2,0],[0,3,4,0],[3,4,5,0],[31,3,30,1],[6,7,8,0],[7,8,9,0],[10,11,12,0],
@@ -85,10 +88,10 @@ angleh5s = [A / hi for A in angleh5s]
 t = np.arange(1000) / fps
 fig, ax = plt.subplots(figsize=(13, 3.5))
 ax.plot(t, angleh5s[0][1000:2000, [3, 9, 13]])
-ax.set_xlabel("zaman (s)"); ax.set_ylabel("normalize açı (0-1)")
-ax.legend(["kanat ucu açısı", "arka bacak tibia açısı", "orta bacak femur-tibia açısı"], loc="upper right")
-ax.set_title("Pozun egocentric temsili: 3 eklem açısı zamanla")
-fig.tight_layout(); fig.savefig(os.path.join(OUT, "03_eklem_acilari.png"), dpi=110); plt.close(fig)
+ax.set_xlabel("time (s)"); ax.set_ylabel("normalized angle (0-1)")
+ax.legend(["wing tip angle", "hind leg tibia angle", "middle leg femur-tibia angle"], loc="upper right")
+ax.set_title("Egocentric pose: 3 joint angles over time")
+fig.tight_layout(); fig.savefig(os.path.join(OUT, "03_joint_angles.png"), dpi=110); plt.close(fig)
 
 # ---- PCA
 X = np.concatenate(angleh5s, axis=0)
@@ -100,16 +103,16 @@ print("PCA: keep %d modes for 95%% variance; first 5 modes explain: %s"
 fig, ax = plt.subplots(1, 2, figsize=(14, 3.8))
 ax[0].plot(np.arange(1, X.shape[1] + 1), np.cumsum(p.explained_variance_ratio_), "firebrick", marker=".")
 ax[0].axvline(n_pca, ls="--", color="royalblue"); ax[0].axhline(0.95, ls=":", color="grey")
-ax[0].set_xlabel("PCA bileşen sayısı"); ax[0].set_ylabel("açıklanan toplam varyans")
-ax[0].set_title("%d bileşen varyansın %%95'ini taşıyor" % n_pca)
+ax[0].set_xlabel("number of PCA components"); ax[0].set_ylabel("cumulative explained variance")
+ax[0].set_title("%d components carry 95%% of the variance" % n_pca)
 show, width = 4, 0.2
 for i in range(show):
     ax[1].bar(np.arange(X.shape[1]) + i * width, p.components_[i], width=width, label="PC%d" % (i + 1))
-ax[1].set_xlabel("22 eklem açısı"); ax[1].set_ylabel("PC'ye katkı"); ax[1].legend(ncol=4)
-ax[1].set_title("İlk 4 bileşen hangi açılardan oluşuyor?")
+ax[1].set_xlabel("22 joint angles"); ax[1].set_ylabel("contribution to PC"); ax[1].legend(ncol=4)
+ax[1].set_title("Which angles make up the first 4 components?")
 fig.tight_layout(); fig.savefig(os.path.join(OUT, "04_pca.png"), dpi=110); plt.close(fig)
 
 y = p.transform(X)[:, :n_pca]
 projs_list = np.split(y, np.cumsum([A.shape[0] for A in angleh5s])[:-1])
-np.savez(os.path.join(OUT, "nb01_pca.npz"), proj0=projs_list[0], proj1=projs_list[1], n_pca=n_pca, fps=fps)
-print("saved:", sorted(os.listdir(OUT)))
+np.savez(os.path.join(CACHE, "pca.npz"), proj0=projs_list[0], proj1=projs_list[1], n_pca=n_pca, fps=fps)
+print("saved:", sorted(os.listdir(OUT)), sorted(os.listdir(CACHE)))
