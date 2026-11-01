@@ -17,7 +17,7 @@ Can recurring, interpretable behaviours be found directly in the movement of tra
 | Fruit-fly demo recordings (`fly_leap_test`, `fly_leap_test_2`) from the tutorial repository: 32 tracked keypoints per frame, 100 fps | Used for all current results |
 | Mouse interaction videos from the research group, two cameras (top + side); partly raw, partly already pose-tracked | Not yet analysed; format and labels still to be confirmed |
 
-The fly data is not stored in this repository; it comes with the tutorial repository (see *Reproducing*). Pose estimation for the mouse videos is planned with [SLEAP](https://sleap.ai).
+The fly data is not stored in this repository; it comes with the tutorial repository (see *Reproducing*). Pose estimation for the mouse videos uses [SLEAP](https://sleap.ai) with the research group's trained model; the current state, setup and plan are in [SLEAP_PIPELINE.md](SLEAP_PIPELINE.md).
 
 ## Method pipeline
 
@@ -96,6 +96,7 @@ calisma/
   nb01_adim4_hareket_rengi.py  map coloured by movement amplitude
   nb01_adim5_watershed.py    watershed regions, ethogram, example bouts
   nb01_ozet_*.py             English summary figures and overview page
+  sleap_*.py                 mouse videos: identity, cleaning, check plots, skeleton video (see SLEAP_PIPELINE.md)
   cikti/                     generated figures (cikti/en/: English versions)
 ```
 
