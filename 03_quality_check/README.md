@@ -49,6 +49,7 @@ python Notebooks\03_quality_check\scripts\analyze_reviews.py review\$N\annotatio
 
 - [x] Protocol v1.0, annotation page, analysis script (tested with simulated records)
 - [x] Review folders prepared for the 3 test videos (m1313, m1599, m1600)
-- [ ] Annotate the 3 test videos (both annotators), then analyse
+- [x] Annotator ZT: all 3 videos done; records in [records/](records/)
+- [ ] Second annotator, then analyse
 - [ ] Write the automatic checks
 - [ ] Run it on the 3 test videos and fill in the results table in [02_pose_sleap/README.md](../02_pose_sleap/README.md)
