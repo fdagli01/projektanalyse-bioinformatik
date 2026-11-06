@@ -71,15 +71,6 @@ an annotation error. Either way, in these frames the second mouse is physically 
 
 Repeats answered identically: MFD 5/8, ZT 3/8. Per field, agreement on repeats is 75–100 % for both.
 
-## 4. Limitations
-
-- One video, two annotators, 80 frames: the intervals are wide (often ± 10 points).
-- Strata were drawn independently, so a few sampled frames lie less than 2 s apart (m1313: 3 pairs) and are not
-  fully independent observations.
-- During annotation, MFD asked an assistant about the decision rules; items I51, I57 and I76 (I76 is the hidden repeat
-  of I51) were discussed in this way. The intra-rater pair I51/I76 is therefore not independent.
-- MFD changed 29 answers after the reveal (22 of them back and forth within item I20); the analysis uses final answers.
-- Kappa is unreliable for fields with one dominant answer (section 3.3).
 
 ## 5. Open decisions
 
