@@ -26,7 +26,9 @@ The rules are in [PROTOCOL.md](PROTOCOL.md): questions, decision rules, body reg
 | `review_page.html` | the annotation page (copied into every review folder as `index.html`) |
 | `scripts/analyze_reviews.py` | report from the exported records: 95 % Wilson intervals, intra- and inter-rater agreement (Cohen's kappa) |
 | `answer_guide.png` | picture guide to the answer options of Q1–Q6 (simplified drawings; the protocol text decides) |
+| `scripts/plot_reviews.py` | figures from the same records: accuracy by stratum, inter-rater agreement, scene vs stratum |
 | `records/` | exported annotation records (JSON) |
+| [`results/`](results/README.md) | findings per video: report, figures, methods and limitations |
 
 **1. Prepare a video** (the male's fur colour is read from the folder name):
 
@@ -52,6 +54,8 @@ python Notebooks\03_quality_check\scripts\analyze_reviews.py review\$N\annotatio
 - [x] Protocol v1.0, annotation page, analysis script (tested with simulated records)
 - [x] Review folders prepared for the 3 test videos (m1313, m1599, m1600)
 - [x] Annotator ZT: all 3 videos done; records in [records/](records/)
-- [ ] Second annotator, then analyse
+- [x] m1313: both annotators done (MFD, ZT); results in [results/](results/README.md)
+- [ ] m1599, m1600: second annotator (MFD), then analyse
+- [ ] Agree on the rule for an almost fully hidden mouse (protocol v1.1 for new videos)
 - [ ] Write the automatic checks
 - [ ] Run it on the 3 test videos and fill in the results table in [02_pose_sleap/README.md](../02_pose_sleap/README.md)
