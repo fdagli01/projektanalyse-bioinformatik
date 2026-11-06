@@ -15,18 +15,42 @@ COLORS = {"male": "tab:blue", "female": "tab:orange"}
 
 
 def to_arrays(labels):
-    """(frames, animals, nodes, 2) positions and (frames, animals, nodes) scores, animals ordered by track."""
+    """(frames, animals, nodes, 2) positions and (frames, animals, nodes) scores, animals ordered by track.
+
+    There is one row for every frame from the first to the last labelled frame, so row i + 1 is always the
+    next video frame; frames in which SLEAP found nothing stay NaN.
+    Instances without a track cannot be given a row and are skipped. If two instances share a track in one
+    frame (a duplicate), the one with the higher mean score is kept. Both cases are counted and printed.
+    """
     tracks = [t.name for t in labels.tracks]
     nn = len(labels.skeleton.nodes)
-    lfs = sorted(labels.labeled_frames, key=lambda f: f.frame_idx)
-    pos = np.full((len(lfs), len(tracks), nn, 2), np.nan)
-    sc = np.full((len(lfs), len(tracks), nn), np.nan)
-    for i, lf in enumerate(lfs):
+    idx = [lf.frame_idx for lf in labels.labeled_frames]
+    first, last = min(idx), max(idx)
+    frames = np.arange(first, last + 1)
+    pos = np.full((len(frames), len(tracks), nn, 2), np.nan)
+    sc = np.full((len(frames), len(tracks), nn), np.nan)
+    best = np.full((len(frames), len(tracks)), -np.inf)       # mean score of the instance stored so far
+    no_track = duplicates = 0
+    for lf in labels.labeled_frames:
+        i = lf.frame_idx - first
         for inst in lf.instances:
+            if inst.track is None:
+                no_track += 1
+                continue
             k = tracks.index(inst.track.name)
             a = inst.numpy(scores=True)
-            pos[i, k], sc[i, k] = a[:, :2], a[:, 2]
-    return np.array([f.frame_idx for f in lfs]), tracks, pos, sc
+            with np.errstate(all="ignore"):
+                m = np.nanmean(a[:, 2]) if np.isfinite(a[:, 2]).any() else 0.0
+            if best[i, k] > -np.inf:
+                duplicates += 1
+                if m <= best[i, k]:
+                    continue
+            pos[i, k], sc[i, k], best[i, k] = a[:, :2], a[:, 2], m
+    empty = len(frames) - len(set(idx))
+    if no_track or duplicates or empty:
+        print("to_arrays: %d frames without any prediction, %d instances without track (skipped), "
+              "%d duplicate instances on one track (lower score dropped)" % (empty, no_track, duplicates))
+    return frames, tracks, pos, sc
 
 
 def main():
