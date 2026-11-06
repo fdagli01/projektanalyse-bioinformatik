@@ -1,84 +1,64 @@
-# Results – manual annotation, protocol v1.0
+# Results – how good are the SLEAP poses?
 
-Status: **video m1313 complete with two annotators (MFD, ZT)**. Videos m1599 and m1600 have one record (ZT) each;
-their results are not reported here until the second annotator is done, so that the second annotator stays blind.
+**Status:** video m1313 is done by both annotators (MFD, ZT). m1599 and m1600 follow when the second annotator has
+finished them (until then their results stay hidden, so that the second person is not influenced).
 
-| Video | Records | Report | Figures |
-|---|---|---|---|
-| [20260320_m1313black_f1603agouti_wt_estrus](20260320_m1313black_f1603agouti_wt_estrus/) | MFD, ZT | [report.md](20260320_m1313black_f1603agouti_wt_estrus/report.md) | fig 1–3 below |
-| 20260322_m1599agouti_f1550black_wt_diestrus | ZT | pending (second annotator) | – |
-| 20260322_m1600agouti_f1553black_wt_diestrus | ZT | pending (second annotator) | – |
+## What we wanted to know
 
-## 1. Question
+Before we build a behaviour map from the SLEAP skeletons, we need to know whether we can trust them:
+are the body points in the right place, and does our script tell the male and the female apart correctly?
 
-How reliable are the raw SLEAP poses (`predictions_raw.slp`, before identity assignment and cleaning), and does the
-fur-colour rule of the identity script pick the right mouse? Is a human judgement of this reproducible between two people?
+## What we did
 
-## 2. Material and methods
+Two people looked at the same 80 frames of video m1313, each on their own, and judged every skeleton with the same
+written rules ([PROTOCOL.md](../PROTOCOL.md)). The frames were chosen so that both easy moments (mice apart) and hard
+moments (mice touching or on top of each other) are included.
 
-- **Video:** 20260320_m1313black_f1603agouti_wt_estrus, top camera, 25 fps, 44,977 frames. Male black, female agouti.
-- **Sampling** ([sample_frames.py](../scripts/sample_frames.py), seed 0, first 3,000 frames skipped): 80 frames in four
-  strata defined from the SLEAP output: *apart* (two skeletons, > 250 px apart, n = 30), *contact* (< 120 px, n = 30),
-  *single* (one skeleton, n = 10), *random* (n = 10). Plus 8 hidden repeats → 88 items.
-- **Annotation** ([PROTOCOL.md](../PROTOCOL.md)): two annotators, independently, blinded to stratum, frame number and
-  scores. Each item: scene (Q1), detection per skeleton (Q2), missed mouse (Q3), head / body / rear region correct (Q4),
-  skeleton whole (Q5), darker mouse (Q6), overall confidence (Q7). ±5 context frames were available.
-- **Analysis** ([analyze_reviews.py](../scripts/analyze_reviews.py), [plot_reviews.py](../scripts/plot_reviews.py)):
-  proportions with 95 % Wilson intervals on first showings; regions judged *not visible* are excluded from the
-  denominator. Inter-rater agreement: percent agreement and Cohen's kappa. Intra-rater agreement: the 8 repeats.
+## What we found
 
-## 3. Results (m1313)
+**1. When the mice are apart, SLEAP is reliable.**
+Almost all body points (about 9 out of 10 or more) sit where they should.
 
-### 3.1 Pose accuracy depends on contact
+**2. When the mice touch, SLEAP makes more mistakes.**
+More points end up in the wrong place, and many skeletons are stretched or connect points of both mice.
+This is the most important result, because the interaction between male and female happens mostly in contact.
 
-![fig1](20260320_m1313black_f1603agouti_wt_estrus/fig1_accuracy_by_stratum.png)
+![SLEAP accuracy: apart vs contact](20260320_m1313black_f1603agouti_wt_estrus/fig1_accuracy_by_stratum.png)
+*Each bar is the share of correct body regions or whole skeletons; left = mice apart, middle = in contact.*
 
-| Measure | Apart (MFD / ZT) | Contact (MFD / ZT) |
-|---|---|---|
-| head correct | 93 % [84–97] / 97 % [88–99] | 93 % [84–97] / 82 % [71–90] |
-| body correct | 97 % [89–99] / 97 % [89–99] | 81 % [69–89] / 78 % [64–87] |
-| rear correct | 97 % [89–99] / 87 % [76–93] | 85 % [72–92] / 79 % [65–88] |
-| skeleton whole | 93 % [84–97] / 92 % [82–96] | 80 % [68–88] / 63 % [50–74] |
+**3. When one mouse is on top of the other, SLEAP often sees only one mouse.**
+The second mouse is there but gets no skeleton at all.
 
-With the mice apart, 87–97 % of regions are correct. In contact, both annotators see lower values, most clearly for
-the body region and for whole skeletons (stretched or joining points of both mice). 99 % of all skeletons lie on a
-real mouse (149/150 for both annotators); ghost skeletons are practically absent.
+**4. Telling male and female apart by fur colour works.**
+Whenever the annotators could see which mouse was darker, they agreed with the script (practically every time).
 
-### 3.2 The fur-colour identity rule agrees with both annotators
+**5. The two annotators mostly judge the same way.**
+They differ mainly on one question: if a mouse is almost completely hidden under the other, does it count as
+"visible"? The rules did not say, so they decided differently (compare the two panels below).
 
-Where an annotator could tell the darker mouse, it was the one the identity script picks in 67/68 (MFD) and 66/66 (ZT)
-items (99 % [92–100] and 100 % [94–100]). Agreement between annotators on the darker mouse: kappa 0.84.
+![Scene judgement vs SLEAP](20260320_m1313black_f1603agouti_wt_estrus/fig3_scene_vs_stratum.png)
+*Rows: what SLEAP found; columns: what the annotator saw. The "single" row is where the two people disagree.*
 
-### 3.3 Agreement between annotators
+## What this means for the project
 
-![fig2](20260320_m1313black_f1603agouti_wt_estrus/fig2_agreement.png)
+- The skeletons are good enough for behaviour **when the mice are apart**.
+- For **contact**, which matters most for interaction, they have to get better first: either by training SLEAP with
+  more contact frames, or by repairing these frames afterwards. This decision is still open (ask Maria).
+- The male/female labels can be trusted.
 
-- Substantial or better: darker mouse (κ = 0.84), scene (κ = 0.76).
-- Moderate: missed mouse, regions and whole skeleton (κ = 0.32–0.59, percent agreement 82–90 %).
-- `detect_A`, `darker_conf` and `overall` have 79–98 % agreement but κ ≈ 0: nearly all answers fall in one category,
-  so chance agreement is already close to 1 (kappa paradox). For these fields percent agreement is the measure to report.
+## Next steps
 
-### 3.4 Main disagreement: frames where SLEAP found one mouse
+1. Second annotator finishes m1599 and m1600, to see if the same picture appears in all three videos.
+2. Agree on the rule for an almost fully hidden mouse.
+3. Decide with Maria: retrain SLEAP, or repair contact frames in the cleaning step.
 
-![fig3](20260320_m1313black_f1603agouti_wt_estrus/fig3_scene_vs_stratum.png)
+## Details
 
-12 of 80 items have a different scene judgement; 9 of them are in the *single* stratum. MFD judged 9/10 of these
-frames *one mouse visible*, ZT judged 8/10 *overlapping* and marked a missed mouse in all 10. The protocol does not
-say whether a mouse that is almost fully hidden by the other counts as visible, so the difference is a rule gap, not
-an annotation error. Either way, in these frames the second mouse is physically present and SLEAP has no skeleton for it.
-
-### 3.5 Intra-rater agreement
-
-Repeats answered identically: MFD 5/8, ZT 3/8. Per field, agreement on repeats is 75–100 % for both.
-
-
-## 5. Open decisions
-
-1. Agree on the rule for an almost fully hidden mouse (discuss items I27, I30, I42, I44, I51, I67, I70, I72, I81,
-   then I03, I22, I52). Write it into the protocol as v1.1 for new videos; m1599 and m1600 are finished with v1.0.
-2. For new videos: a minimum spacing between sampled frames (e.g. 50 frames).
-
-## Reproduce
+- All numbers with confidence intervals, agreement between the annotators (Cohen's kappa) and repeat consistency:
+  [report.md](20260320_m1313black_f1603agouti_wt_estrus/report.md) and
+  [fig2_agreement.png](20260320_m1313black_f1603agouti_wt_estrus/fig2_agreement.png).
+- Raw answers: [records/](../records/). Scripts: [analyze_reviews.py](../scripts/analyze_reviews.py),
+  [plot_reviews.py](../scripts/plot_reviews.py). To recreate the report and figures:
 
 ```powershell
 cd $HOME\Desktop\Projektanalyse\Notebooks\03_quality_check
