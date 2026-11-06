@@ -25,6 +25,8 @@ The rules are in [PROTOCOL.md](PROTOCOL.md): questions, decision rules, body reg
 | `scripts/sample_frames.py` | picks the frames (fixed seed), draws them with ±5 context frames, adds 8 hidden repeats, writes the page |
 | `review_page.html` | the annotation page (copied into every review folder as `index.html`) |
 | `scripts/analyze_reviews.py` | report from the exported records: 95 % Wilson intervals, intra- and inter-rater agreement (Cohen's kappa) |
+| `answer_guide.png` | picture guide to the answer options of Q1–Q6 (simplified drawings; the protocol text decides) |
+| `records/` | exported annotation records (JSON) |
 
 **1. Prepare a video** (the male's fur colour is read from the folder name):
 
