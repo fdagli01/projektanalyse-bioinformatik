@@ -15,7 +15,7 @@ Ideas for the SLEAP → MotionMapper pipeline. Newest first in each section.
       Should the front camera be used?
 
 ## Done
-- [ ] (2026-11-01) Run SLEAP predictions on 3 test videos (m1313, m1599, m1600) — in progress.
+- [x] (2026-11-01) Run SLEAP predictions on 3 test videos (m1313, m1599, m1600).
 
 ## Dropped
 - (2026-11-01) Decode video on the GPU (NVDEC) — decoding is only ~15% of runtime,

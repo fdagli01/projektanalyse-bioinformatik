@@ -3,7 +3,7 @@
 All stages of the project, in order. Each stage ends with a clear result that the next stage needs.
 Ideas that are not yet part of a stage go to [IMPROVEMENTS.md](IMPROVEMENTS.md).
 
-Last update: 2026-11-01
+Last update: 2026-11-06 · What we have learned so far: [docs/findings.md](docs/findings.md)
 
 ---
 
@@ -29,10 +29,11 @@ Last update: 2026-11-01
 
 - [x] SLEAP and the model running on the Windows PC (RTX 4070, ~35 frames/s, ~22 min per video)
 - [x] Scripts: identity, raw data plots, cleaning, skeleton video
-- [ ] SLEAP predictions for 3 test videos (m1313 black male, m1599 and m1600 agouti male)
-- [ ] Look at the raw predictions together, then decide the next steps
-- [ ] Identity on the 3 test videos
-- [ ] Choose the cleaning thresholds from full videos (so far from 12 s only), then clean
+- [x] SLEAP predictions for 3 test videos (m1313 black male, m1599 and m1600 agouti male)
+- [x] Look at the raw predictions together (manual annotation, stage 3): good apart, weak in contact
+- [ ] Identity on the 3 test videos (m1313 done)
+- [ ] Decide with Maria: retrain with contact frames, or repair them in the cleaning step
+- [ ] Choose the cleaning thresholds from full videos (first run on m1313: 37 % of frames doubtful), then clean
 - [ ] Fill in the results table in the stage 2 README
 
 ## Stage 3 – Automated quality check ⏳
@@ -44,8 +45,8 @@ Last update: 2026-11-01
 - [ ] Detect identity swaps between male and female
 - [ ] Flag frames where the fur grey-level difference is small (unsure identity)
 - [ ] Read the model's own accuracy (`metrics.val.0.npz`, `labels_gt/pr.val.0.slp`)
-- [ ] Sample frames (half apart, half in contact), draw them with skeleton and label for review
-- [ ] Review the samples of the 3 test videos and report to the research group
+- [x] Sample frames (apart, contact, single, random), draw them with skeleton for review (protocol v1.0)
+- [ ] Review the samples of the 3 test videos (m1313: both annotators; m1599, m1600: one) and report to the research group
 
 ## Stage 4 – Batch processing ⏳
 
