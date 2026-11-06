@@ -58,29 +58,29 @@ They differ mainly on one question: if a mouse is almost completely hidden under
 For that, every video needs skeletons with the right male/female label, and the bad frames, especially in contact,
 must be found and repaired or left out.
 
-**Scripts that exist**
+**The idea behind each script**
 
-| Script | Stage | What it is meant to find or do | State |
-|---|---|---|---|
-| `assign_identity.py` | 2 | Which skeleton is the male and which the female (the darker mouse is the black one) | works on m1313; rule confirmed by both annotators |
-| `raw_data_plots.py` | 2 | A first look at the raw poses: confidence, jumps, body length, distance between the mice | runs |
-| `clean_predictions.py` | 2 | Bad points (missing, unsure, sudden jumps), broken skeletons; fills short gaps and lists doubtful moments | first run on m1313: flags too much, finds only about half of the broken skeletons |
-| `draw_skeleton_video.py` | 2 | A video with the skeletons drawn on, to check by eye | runs |
-| `sample_frames.py` | 3 | Picks frames to judge by hand, from easy (apart) to hard (contact, one mouse) | done for the 3 test videos |
-| `review_page.html` | 3 | The page where a person judges each skeleton | in use |
-| `analyze_reviews.py`, `plot_reviews.py` | 3 | Turn the judgements into numbers and figures: how often SLEAP is right, and whether the two people agree | done for m1313 |
+| Script | Stage | Idea |
+|---|---|---|
+| `assign_identity.py` | 2 | Tell which skeleton is the male and which the female, using fur colour: the darker mouse should be the black one. |
+| `raw_data_plots.py` | 2 | Take a first look at the raw poses (confidence, jumps, body length, distance between the mice) before choosing any thresholds. |
+| `clean_predictions.py` | 2 | Find bad points (missing, unsure, sudden jumps) and broken skeletons, fill short gaps, and list the moments that need a closer look. |
+| `draw_skeleton_video.py` | 2 | Draw the skeletons onto the video, so they can be checked by eye. |
+| `sample_frames.py` | 3 | Pick frames to judge by hand, covering easy moments (mice apart) and hard ones (contact, one mouse on top). |
+| `review_page.html` | 3 | A page where a person judges each skeleton with fixed rules. |
+| `analyze_reviews.py`, `plot_reviews.py` | 3 | Turn the judgements into numbers and figures: how often SLEAP is right, and whether two people judge alike. |
 
-The scripts in `01_method_fly/scripts/` were for learning MotionMapper on fly data (cleaning → angles → PCA →
-wavelets → UMAP map → watershed regions); stage 5 will reuse these steps for the mice.
+The scripts in `01_method_fly/scripts/` are for learning MotionMapper on fly data (cleaning → angles → PCA →
+wavelets → UMAP map → watershed regions); the idea is to reuse these steps for the mice in stage 5.
 
-**Scripts still needed**
+**Ideas for further scripts**
 
-| Script | What it should find or do |
+| Script | Idea |
 |---|---|
-| better cleaning (stage 2) | skeletons that connect points of both mice; keep the one mouse when SLEAP finds only one; keep male/female consistent over time when the fur difference is small |
-| automatic check (stage 3) | the same errors as the manual check, but on every frame, and compared with the manual judgements to show how well it works |
-| batch (stage 4) | run everything on all videos and write one summary table |
-| MotionMapper for mice (stage 5) | the behaviour map, with features of each mouse and between the two (distance, orientation, contact) |
+| better cleaning (stage 2) | Find skeletons that connect points of both mice; keep the mouse when SLEAP sees only one; keep male/female consistent over time. |
+| automatic check (stage 3) | Look for the same errors as the manual check, but on every frame, and compare with the manual judgements. |
+| batch (stage 4) | Run everything on all videos and write one summary table. |
+| MotionMapper for mice (stage 5) | Build the behaviour map from features of each mouse and between the two (distance, orientation, contact). |
 
 ## Details
 
